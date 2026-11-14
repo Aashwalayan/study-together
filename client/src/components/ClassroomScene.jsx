@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useMemo, useEffect, useRef, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -16,6 +16,16 @@ const Z1 = 13; // front edge of the floor
 const FLOOR_D = Z1 - Z0;
 const FLOOR_CZ = (Z0 + Z1) / 2;
 const SHADOW = { castShadow: true, receiveShadow: true };
+
+
+// Camera rules: the camera and its focus point can never leave the room.
+const MARGIN = 0.7; // how close the camera may get to a wall
+const CAM_LIMITS = { x: [-8 + MARGIN, 8 - MARGIN], y: [0.6, 4.4], z: [Z0 + MARGIN, Z1 - MARGIN] };
+const TARGET_LIMITS = { x: CAM_LIMITS.x, y: [0.4, 2.5], z: CAM_LIMITS.z };
+const START_CAMERA = [0, 3.8, 12.2];
+const START_TARGET = [0, 1.2, 3];
+const WALK_SPEED = 4; // units per second (doubled while holding Shift)
+const MOVE_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'];
 
 const SKIN = ['#f1c7a5', '#e0ac82', '#c68863', '#a2663f', '#7a4a2c', '#f6d9bd'];
 const HAIR = ['#1d1a18', '#3b2a20', '#6b4423', '#a8742f', '#c9a063', '#8a3b2a', '#2a2f3a'];
@@ -212,6 +222,7 @@ function Room() {
       <Box args={[16.4, 5, 0.2]} position={[0, 2.5, Z0 - 0.1]} color="#ece6d8" />
       <Box args={[0.2, 5, FLOOR_D + 0.2]} position={[-8.1, 2.5, FLOOR_CZ - 0.1]} color="#e6e0d0" />
       <Box args={[0.2, 5, FLOOR_D + 0.2]} position={[8.1, 2.5, FLOOR_CZ - 0.1]} color="#e6e0d0" />
+      <Box args={[16.4, 5, 0.2]} position={[0, 2.5, Z1 + 0.1]} color="#ece6d8" />
       <Box args={[16, 1, 0.05]} position={[0, 0.5, Z0 + 0.025]} color="#7f9a8f" />
       <Box args={[0.05, 1, FLOOR_D]} position={[-7.975, 0.5, FLOOR_CZ]} color="#7f9a8f" />
       <Box args={[0.05, 1, FLOOR_D]} position={[7.975, 0.5, FLOOR_CZ]} color="#7f9a8f" />
@@ -448,11 +459,97 @@ function Seat({ seat, occupant, isMine, canSit, phase, bubble, onSit }) {
   );
 }
 
+const clamp = (v, [min, max]) => Math.min(max, Math.max(min, v));
+const within = (v, [min, max]) => v >= min && v <= max;
+
+// Moves the camera with WASD and enforces the room limits every frame, no
+// matter what moved the camera (WASD, orbiting or zooming).
+function CameraRig({ controlsRef }) {
+  const camera = useThree((state) => state.camera);
+  const pressed = useRef(new Set());
+  const forward = useMemo(() => new THREE.Vector3(), []);
+  const move = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    // Never steal keys while the user is typing in the chat box
+    const isTyping = (e) => {
+      const el = e.target;
+      return (
+        el instanceof HTMLElement &&
+        (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
+      );
+    };
+    const down = (e) => {
+      if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (MOVE_CODES.includes(e.code)) pressed.current.add(e.code);
+    };
+    const up = (e) => pressed.current.delete(e.code);
+    const clear = () => pressed.current.clear();
+
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', clear);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', clear);
+    };
+  }, []);
+
+  useFrame((_, delta) => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const keys = pressed.current;
+    const forwardInput = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0);
+    const sideInput = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
+
+    if (forwardInput || sideInput) {
+      // Walk on the floor plane, relative to where the camera is looking
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      forward.normalize();
+      move.set(0, 0, 0).addScaledVector(forward, forwardInput);
+      move.x += -forward.z * sideInput;
+      move.z += forward.x * sideInput;
+      const fast = keys.has('ShiftLeft') || keys.has('ShiftRight');
+      move.normalize().multiplyScalar(WALK_SPEED * (fast ? 2 : 1) * Math.min(delta, 0.1));
+
+      // Move the camera and its focus point together. An axis is blocked if
+      // either would leave the room, which makes you slide along walls.
+      ['x', 'z'].forEach((axis) => {
+        const nextCamera = camera.position[axis] + move[axis];
+        const nextTarget = controls.target[axis] + move[axis];
+        if (within(nextCamera, CAM_LIMITS[axis]) && within(nextTarget, TARGET_LIMITS[axis])) {
+          camera.position[axis] = nextCamera;
+          controls.target[axis] = nextTarget;
+        }
+      });
+    }
+
+    // Hard limits, applied after OrbitControls has handled orbit and zoom
+    camera.position.set(
+      clamp(camera.position.x, CAM_LIMITS.x),
+      clamp(camera.position.y, CAM_LIMITS.y),
+      clamp(camera.position.z, CAM_LIMITS.z)
+    );
+    controls.target.set(
+      clamp(controls.target.x, TARGET_LIMITS.x),
+      clamp(controls.target.y, TARGET_LIMITS.y),
+      clamp(controls.target.z, TARGET_LIMITS.z)
+    );
+    camera.lookAt(controls.target);
+  });
+
+  return null;
+}
+
 export default function ClassroomScene({ seats, occupants, myUserId, bubbles, phase, onSit }) {
+  const controlsRef = useRef(null);
   const bySeat = new Map(occupants.filter((o) => o.seatId).map((o) => [o.seatId, o]));
 
   return (
-    <Canvas shadows camera={{ position: [0, 6.5, 14], fov: 50 }} dpr={[1, 2]}>
+    <Canvas shadows camera={{ position: START_CAMERA, fov: 50 }} dpr={[1, 2]}>
       <color attach="background" args={['#cfd8d4']} />
       <hemisphereLight args={['#fff6e5', '#9a8a74', 0.9]} />
       {/* sunlight from the window side; the only light that casts shadows */}
@@ -486,15 +583,16 @@ export default function ClassroomScene({ seats, occupants, myUserId, bubbles, ph
           />
         );
       })}
-      <OrbitControls
-        target={[0, 1.2, 3]}
+            <OrbitControls
+        ref={controlsRef}
+        target={START_TARGET}
         enablePan={false}
-        minDistance={4}
-        maxDistance={20}
+        minDistance={2}
+        maxDistance={14}
+        minPolarAngle={0.2}
         maxPolarAngle={Math.PI / 2.1}
-        minAzimuthAngle={-1.1}
-        maxAzimuthAngle={1.1}
       />
+      <CameraRig controlsRef={controlsRef} />
     </Canvas>
   );
 }
