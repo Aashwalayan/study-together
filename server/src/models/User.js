@@ -7,8 +7,22 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     // What they are currently studying, shown next to their name in rooms
     subject: { type: String, trim: true, maxlength: 60, default: '' },
+
+    // Email verification. Only a SHA-256 hash of the token is stored, so a
+    // database leak cannot be used to verify accounts.
+    emailVerified: { type: Boolean, default: false },
+    verifyTokenHash: { type: String, index: true, sparse: true },
+    verifyTokenExpires: { type: Date },
+    verifySentAt: { type: Date },
   },
   { timestamps: true }
+);
+
+// Abandoned or mistyped sign-ups clean themselves up after 7 days, which also
+// frees the email address. Verified accounts are never touched.
+userSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 7 * 24 * 60 * 60, partialFilterExpression: { emailVerified: false } }
 );
 
 export default mongoose.model('User', userSchema);

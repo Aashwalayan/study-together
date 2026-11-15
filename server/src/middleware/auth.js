@@ -11,6 +11,9 @@ export async function requireAuth(req, res, next) {
     const payload = jwt.verify(token, config.jwtSecret);
     const user = await User.findById(payload.sub).lean();
     if (!user) return res.status(401).json({ error: 'User no longer exists' });
+    if (!user.emailVerified) {
+      return res.status(403).json({ error: 'Verify your email to continue', code: 'EMAIL_NOT_VERIFIED' });
+    }
 
     req.user = { id: String(user._id), name: user.name, subject: user.subject };
     next();

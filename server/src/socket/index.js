@@ -66,6 +66,7 @@ export function registerSocket(io) {
       const payload = jwt.verify(token, config.jwtSecret);
       const user = await User.findById(payload.sub).lean();
       if (!user) return next(new Error('User not found'));
+      if (!user.emailVerified) return next(new Error('Verify your email first'));
       socket.data.user = { id: String(user._id), name: user.name, subject: user.subject };
       socket.data.rateLimit = { count: 0, resetAt: 0 };
       next();

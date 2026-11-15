@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import ResendVerification from '../components/ResendVerification.jsx';
 
 export default function AuthPage({ mode }) {
   const isRegister = mode === 'register';
@@ -9,6 +10,8 @@ export default function AuthPage({ mode }) {
   const [form, setForm] = useState({ name: '', email: '', password: '', subject: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Set after registering, or after a sign-in attempt on an unverified account
+  const [pending, setPending] = useState(null); // { email, emailSent }
 
   if (user) return <Navigate to="/" replace />;
 
@@ -19,15 +22,41 @@ export default function AuthPage({ mode }) {
     setError('');
     setBusy(true);
     try {
-      if (isRegister) await register(form);
-      else await login(form.email, form.password);
-      navigate('/');
+      if (isRegister) {
+        const res = await register(form);
+        setPending({ email: res.email, emailSent: res.emailSent });
+      } else {
+        await login(form.email, form.password);
+        navigate('/');
+      }
     } catch (err) {
-      setError(err.message);
+      if (err.code === 'EMAIL_NOT_VERIFIED') setPending({ email: form.email, emailSent: null });
+      else setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  if (pending) {
+    return (
+      <main className="auth">
+        <div className="auth-card">
+          <h1>Check your email</h1>
+          <p className="muted">
+            {pending.emailSent === false
+              ? <>We created your account but couldn’t send the email to <strong>{pending.email}</strong>. Use the button below to try again.</>
+              : pending.emailSent === null
+                ? <>Your account <strong>{pending.email}</strong> isn’t verified yet. Open the link in your inbox, or send a new one.</>
+                : <>We sent a verification link to <strong>{pending.email}</strong>. Open it to finish signing up. It expires in 24 hours.</>}
+          </p>
+          <ResendVerification email={pending.email} startCooldown={pending.emailSent !== false} />
+          <p className="muted small">
+            Wrong address? <button type="button" className="linklike" onClick={() => setPending(null)}>Go back</button>
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="auth">
