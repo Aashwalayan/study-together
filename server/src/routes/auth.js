@@ -10,6 +10,10 @@ import { sendVerificationEmail } from '../services/email.js';
 const router = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const USERNAME_RULE = 'Username must be 3 to 20 characters: letters, numbers or underscores';
+
+const cleanUsername = (value) => String(value || '').trim().toLowerCase().replace(/^@/, '');
 
 const signToken = (user) => jwt.sign({ sub: String(user._id) }, config.jwtSecret, { expiresIn: '7d' });
 
@@ -17,7 +21,9 @@ const toPublic = (user) => ({
   id: String(user._id),
   name: user.name,
   email: user.email,
+  username: user.username || null,
   subject: user.subject,
+  bio: user.bio || '',
 });
 
 // Creates a fresh token (replacing any older one) and emails the link
@@ -38,24 +44,31 @@ router.post('/register', async (req, res, next) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
     const subject = String(req.body.subject || '').trim().slice(0, 60);
+    const username = cleanUsername(req.body.username);
 
     if (name.length < 2 || name.length > 40) {
       return res.status(400).json({ error: 'Name must be 2 to 40 characters' });
     }
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Enter a valid email address' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!USERNAME_RE.test(username)) return res.status(400).json({ error: USERNAME_RULE });
 
     if (await User.exists({ email })) {
       return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+    if (await User.exists({ username })) {
+      return res.status(409).json({ error: 'That username is taken' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     let user;
     try {
-      user = await User.create({ name, email, passwordHash, subject });
+      user = await User.create({ name, email, passwordHash, subject, username });
     } catch (err) {
       if (err.code === 11000) {
-        return res.status(409).json({ error: 'An account with this email already exists' });
+        return res.status(409).json({
+          error: err.keyPattern?.username ? 'That username is taken' : 'An account with this email already exists',
+        });
       }
       throw err;
     }
@@ -161,6 +174,15 @@ router.patch('/me', requireAuth, async (req, res, next) => {
   try {
     const update = {};
     if (typeof req.body.subject === 'string') update.subject = req.body.subject.trim().slice(0, 60);
+    if (typeof req.body.bio === 'string') update.bio = req.body.bio.trim().slice(0, 160);
+    if (typeof req.body.username === 'string') {
+      const username = cleanUsername(req.body.username);
+      if (!USERNAME_RE.test(username)) return res.status(400).json({ error: USERNAME_RULE });
+      if (await User.exists({ username, _id: { $ne: req.user.id } })) {
+        return res.status(409).json({ error: 'That username is taken' });
+      }
+      update.username = username;
+    }
     if (typeof req.body.name === 'string') {
       const name = req.body.name.trim();
       if (name.length < 2 || name.length > 40) {
@@ -168,8 +190,13 @@ router.patch('/me', requireAuth, async (req, res, next) => {
       }
       update.name = name;
     }
-    const user = await User.findByIdAndUpdate(req.user.id, update, { new: true });
-    res.json({ user: toPublic(user) });
+    try {
+      const user = await User.findByIdAndUpdate(req.user.id, update, { new: true });
+      res.json({ user: toPublic(user) });
+    } catch (err) {
+      if (err.code === 11000) return res.status(409).json({ error: 'That username is taken' });
+      throw err;
+    }
   } catch (err) {
     next(err);
   }

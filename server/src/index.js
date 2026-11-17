@@ -7,6 +7,7 @@ import { config } from './config.js';
 import { connectDB } from './db.js';
 import authRoutes from './routes/auth.js';
 import roomRoutes from './routes/rooms.js';
+import friendRoutes from './routes/friends.js';
 import { registerSocket } from './socket/index.js';
 
 const app = express();
@@ -28,6 +29,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 // eslint-disable-next-line no-unused-vars

@@ -121,3 +121,37 @@ label.check { display: flex; gap: 0.5rem; align-items: center; color: var(--text
 .resend { margin: 1rem 0; }
 .resend button { width: 100%; }
 button.linklike { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+
+
+/* Navigation, profile and friends */
+.topbar { gap: 1.5rem; }
+.topbar h1 { margin: 0; }
+.topbar-nav { display: flex; gap: 1.25rem; align-items: center; flex: 1; }
+.topbar-nav a { color: var(--muted); text-decoration: none; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
+.topbar-nav a:hover { color: var(--text); }
+.topbar-nav a.active { color: var(--text); border-bottom-color: var(--accent); }
+.badge-count { margin-left: 0.35rem; background: var(--accent); color: var(--accent-text); border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0 0.45rem; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.card input { margin-top: 0; }
+textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.7rem; font: inherit; resize: vertical; }
+label textarea { margin-top: 0.25rem; }
+input:disabled { opacity: 0.6; }
+.hint { display: block; margin-top: 0.2rem; font-size: 0.78rem; color: var(--muted); }
+
+.profile-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.profile-head h2 { margin: 0; }
+.profile-head p { margin: 0; }
+.profile-form { max-width: 520px; }
+.profile-form .primary { margin-top: 0.4rem; }
+
+.social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+.person-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
+.person { display: flex; align-items: center; gap: 0.7rem; }
+.person .info { flex: 1; min-width: 0; }
+.person .line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person .actions { display: flex; gap: 0.4rem; align-items: center; }
+.avatar-chip { display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 700; flex: none; }
+
+@media (max-width: 860px) { .social-grid { grid-template-columns: 1fr; } }

@@ -7,7 +7,7 @@ export default function AuthPage({ mode }) {
   const isRegister = mode === 'register';
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', subject: '' });
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', subject: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // Set after registering, or after a sign-in attempt on an unverified account
@@ -71,6 +71,19 @@ export default function AuthPage({ mode }) {
               <label>
                 Name
                 <input value={form.name} onChange={set('name')} required minLength={2} maxLength={40} />
+              </label>
+              <label>
+                Username
+                <input
+                  value={form.username}
+                  onChange={set('username')}
+                  required
+                  minLength={3}
+                  maxLength={20}
+                  pattern="[A-Za-z0-9_]+"
+                  title="Letters, numbers and underscores"
+                  placeholder="your_name"
+                />
               </label>
               <label>
                 What are you studying?

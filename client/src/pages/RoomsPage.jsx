@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import TopBar from '../components/TopBar.jsx';
 
 export default function RoomsPage() {
-  const { token, user, logout } = useAuth();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
@@ -47,13 +48,7 @@ export default function RoomsPage() {
 
   return (
     <div className="page">
-      <header className="topbar">
-        <h1>Study Together</h1>
-        <div className="topbar-right">
-          <span className="muted">{user.name}</span>
-          <button onClick={logout}>Sign out</button>
-        </div>
-      </header>
+      <TopBar />
 
       {error && <p className="error" role="alert">{error}</p>}
 

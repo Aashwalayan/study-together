@@ -33,12 +33,18 @@ export function AuthProvider({ children }) {
   const login = async (email, password) =>
     accept(await api('/api/auth/login', { method: 'POST', body: { email, password } }));
 
-    // Registering does not sign you in: the account must be verified first
+  // Registering does not sign you in: the account must be verified first
   const register = (fields) => api('/api/auth/register', { method: 'POST', body: fields });
 
   // Opening the emailed link verifies the account and signs you in
   const verifyEmail = async (verifyToken) =>
     accept(await api('/api/auth/verify-email', { method: 'POST', body: { token: verifyToken } }));
+
+  const updateProfile = async (fields) => {
+    const data = await api('/api/auth/me', { method: 'PATCH', token, body: fields });
+    setUser(data.user);
+    return data.user;
+  };
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -47,7 +53,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, register, verifyEmail, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, register, verifyEmail, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,6 +4,8 @@ import AuthPage from './pages/AuthPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import RoomPage from './pages/RoomPage.jsx';
 import VerifyEmailPage from './pages/VerifyEmailPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import FriendsPage from './pages/FriendsPage.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -19,6 +21,8 @@ export default function App() {
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/" element={<Protected><RoomsPage /></Protected>} />
+      <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+      <Route path="/friends" element={<Protected><FriendsPage /></Protected>} />
       <Route path="/room/:roomId" element={<Protected><RoomPage /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

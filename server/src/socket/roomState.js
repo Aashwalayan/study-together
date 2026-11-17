@@ -31,6 +31,14 @@ export function ensureState(roomId, roomDoc) {
 
 export const getState = (roomId) => rooms.get(roomId);
 
+// Which room (if any) is this user sitting in right now?
+export function findRoomIdOfUser(userId) {
+  for (const [roomId, state] of rooms) {
+    if (state.occupants.has(userId)) return roomId;
+  }
+  return null;
+}
+
 export const getOccupantCount = (roomId) => rooms.get(roomId)?.occupants.size ?? 0;
 
 export function addSocket(state, user, socketId) {
