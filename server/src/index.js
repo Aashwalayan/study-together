@@ -12,6 +12,9 @@ import { registerSocket } from './socket/index.js';
 
 const app = express();
 
+// Render sits behind one proxy; trust it so rate limits are per visitor
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: config.clientOrigins }));
 app.use(express.json({ limit: '10kb' }));
 
