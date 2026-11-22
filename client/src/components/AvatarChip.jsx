@@ -10,7 +10,7 @@ export default function AvatarChip({ id, name, size = 38 }) {
   return (
     <span
       className="avatar-chip"
-      style={{ width: size, height: size, background: `hsl(${hueOf(String(id))} 50% 42%)`, fontSize: size * 0.42 }}
+      style={{ width: size, height: size, background: `hsl(${hueOf(String(id))} 26% 36%)`, fontSize: size * 0.42 }}
       aria-hidden="true"
     >
       {(name || '?').trim().charAt(0).toUpperCase()}
