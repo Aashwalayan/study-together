@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import WakeTiles from './WakeTiles.jsx';
+import CornerTiles from './CornerTiles.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 const HEALTH_URL = `${BASE}/api/health`;
@@ -53,7 +53,10 @@ export default function ServerGate({ children }) {
             if (!cancelled) setBlocked(false);
           }
         }
-        await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
+        // Back off the longer we wait, to keep the console and the server calm
+        const waited = Date.now() - started;
+        const delay = waited > 120000 ? 10000 : waited > 30000 ? 5000 : RETRY_MS;
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     })();
 
@@ -90,7 +93,7 @@ export default function ServerGate({ children }) {
         </p>
       )}
 
-      <WakeTiles />
+      <CornerTiles />
     </main>
   );
 }
