@@ -9,6 +9,9 @@ const REQUEST_TIMEOUT_MS = 8000;
 const SLOW_AFTER_S = 60;
 const DIAGNOSE_AFTER_S = 75;
 
+// Add ?wake-preview to the address to look at this screen without waiting for the server to sleep
+const PREVIEW = new URLSearchParams(window.location.search).has('wake-preview');
+
 async function ping(options) {
   const controller = new AbortController();
   const abort = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -30,6 +33,10 @@ export default function ServerGate({ children }) {
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
+    if (PREVIEW) {
+      setShowLoader(true);
+      return undefined;
+    }
     let cancelled = false;
     const started = Date.now();
     const loaderTimer = setTimeout(() => setShowLoader(true), SHOW_AFTER_MS);

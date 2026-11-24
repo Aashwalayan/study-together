@@ -1,32 +1,40 @@
 :root {
-  /* Surfaces: ink black with a hint of blue, flat, separated by hairlines */
-  --bg: #0e1016;
-  --panel: #131621;
-  --panel-2: #191d2a;
-  --field: #0b0d12;
-  --line: #232838;
-  --line-strong: #343a52;
-  --grid: rgba(255, 255, 255, 0.035);
-  --text: #e9e7ef;
-  --muted: #8f93a8;
+  /* Surfaces: neutral graphite, flat, separated by hairlines */
+  --bg: #101114;
+  --panel: #16181c;
+  --panel-2: #1d2025;
+  --field: #0c0d10;
+  --line: #272a31;
+  --line-strong: #3a3e48;
+  --text: #ecebea;
+  --muted: #8e9199;
 
-  /* Primary: dusty violet, with a lighter and a darker variant */
-  --primary: #9b8fd4;
-  --primary-light: #b9b0e4;
-  --primary-dark: #6e63ab;
+  /* Primary: crimson, with a lighter and a darker variant */
+  --primary: #d4504b;
+  --primary-light: #e8827e;
+  --primary-dark: #a43a36;
 
-  /* Secondary: dusty rose, with a lighter and a darker variant */
-  --secondary: #c97a90;
-  --secondary-light: #dd9fb0;
-  --secondary-dark: #9f566b;
+  /* Secondary: slate, with a lighter and a darker variant */
+  --secondary: #7f93b2;
+  --secondary-light: #a6b5cc;
+  --secondary-dark: #586a88;
 
-  --on-primary: #0e1016; /* text that sits on primary or secondary */
+  --on-primary: #101114; /* text that sits on primary or secondary */
+
+  /* Errors share crimson, since slate would not read as an error */
+  --danger: var(--primary-light);
+  --danger-dark: var(--primary-dark);
+
+  /* The same colours as r, g, b so they can be used with transparency */
+  --bg-rgb: 16, 17, 20;
+  --primary-rgb: 212, 80, 75;
+  --secondary-rgb: 127, 147, 178;
+  --danger-rgb: var(--primary-rgb);
 
   /* Names the rest of the stylesheet uses */
   --accent: var(--primary);
   --accent-text: var(--on-primary);
-  --danger: var(--secondary-light);
-  --ok: var(--primary-light);
+  --ok: var(--secondary-light);
 
   --radius: 2px;
   --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
