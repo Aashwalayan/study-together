@@ -198,9 +198,8 @@ button.linklike { background: none; border: 0; padding: 0; color: var(--primary-
 /* Breathing tiles in the corners of the wake-up screen */
 .corner-tiles { position: fixed; inset: 0; pointer-events: none; }
 .corner {
-  --tile: clamp(20px, 3.4vw, 38px);
   position: absolute; display: grid; gap: 6px; padding: 14px;
-  grid-template-columns: repeat(6, var(--tile)); grid-template-rows: repeat(6, var(--tile));
+  grid-template-columns: repeat(var(--n), var(--tile)); grid-template-rows: repeat(var(--n), var(--tile));
   pointer-events: auto; touch-action: none; user-select: none;
 }
 .corner.tl { top: 0; left: 0; }
