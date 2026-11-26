@@ -44,6 +44,12 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Hide the page scrollbar (scrolling still works) so a long page and a short one
+   keep the same width and nothing shifts sideways when you switch tabs */
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+
 html, body, #root { height: 100%; margin: 0; }
 body {
   background-color: var(--bg);
@@ -114,10 +120,12 @@ input:disabled { opacity: 0.6; }
 .page { max-width: 1000px; margin: 0 auto; padding: 1.2rem; }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); }
 .topbar h1 { margin: 0; font-size: 1.4rem; }
-.topbar-nav { display: flex; gap: 1.4rem; align-items: center; flex: 1; }
-.topbar-nav a { color: var(--muted); text-decoration: none; padding: 0.2rem 0; border-bottom: 1px solid transparent; }
+.topbar-nav { position: relative; display: flex; gap: 1.4rem; align-items: center; flex: 1; }
+.topbar-nav a { color: var(--muted); text-decoration: none; padding: 0.2rem 0; }
+.topbar-nav a.active { color: var(--text); }
+.nav-indicator { position: absolute; left: 0; bottom: 0; height: 1px; background: var(--primary); pointer-events: none; }
+.nav-indicator.animated { transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1), width 0.35s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s; }
 .topbar-nav a:hover { color: var(--text); }
-.topbar-nav a.active { color: var(--text); border-bottom-color: var(--primary); }
 .topbar-right { display: flex; gap: 0.8rem; align-items: center; }
 .badge-count { margin-left: 0.4rem; background: var(--secondary); color: var(--on-primary); border-radius: var(--radius); font-family: var(--font-mono); font-size: 0.7rem; padding: 0 0.4rem; }
 
@@ -233,4 +241,5 @@ button.linklike { background: none; border: 0; padding: 0; color: var(--primary-
   .wake-spinner { animation-duration: 3s; }
   .corner-tile { animation: none; }
   .corner-tile.lifted { transform: none; }
+  .nav-indicator.animated { transition: none; }
 }

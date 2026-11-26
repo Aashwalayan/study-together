@@ -29,7 +29,10 @@ export default function FriendsPage() {
 
   const load = useCallback(() => {
     api('/api/friends', { token })
-      .then(setData)
+      .then((d) => {
+        setData(d);
+        window.dispatchEvent(new CustomEvent('friends:updated', { detail: d.incoming.length }));
+      })
       .catch((e) => setError(e.message));
   }, [token]);
 
@@ -53,7 +56,7 @@ export default function FriendsPage() {
         .then((d) => {
           if (!cancelled) setResults(d.users);
         })
-        .catch(() => {});
+        .catch(() => { });
     }, 300);
     return () => {
       cancelled = true;
